@@ -175,7 +175,8 @@ public class MedusaWallpaper extends WallpaperService {
         public void onVisibilityChanged(boolean visible) {
             this.isVisible = visible;
             if (visible) {
-                this.doOneFrame();
+                this.mainHandler.removeCallbacks(this.frameTask);
+                this.mainHandler.post(this.frameTask);
             }
             else {
                 this.mainHandler.removeCallbacks(this.frameTask);
@@ -192,7 +193,8 @@ public class MedusaWallpaper extends WallpaperService {
             this.loadBitmaps();
             this.currentX = this.darkBitmap.getWidth() / 2;
             this.currentY = this.darkBitmap.getHeight() / 2;
-            this.doOneFrame();
+            this.mainHandler.removeCallbacks(this.frameTask);
+            this.mainHandler.post(this.frameTask);
         }
 
         @Override
@@ -206,7 +208,7 @@ public class MedusaWallpaper extends WallpaperService {
                     this.isTouched = true;
                     this.sliderPaint.setAlpha(SLIDER_TOUCH_ALPHA);
                     this.eyesPaint.setAlpha(EYES_TOUCH_ALPHA);
-                    this.doOneFrame();
+                    this.mainHandler.post(this.frameTask);
                     break;
                 case MotionEvent.ACTION_UP:
                     this.isTouched = false;
@@ -232,10 +234,10 @@ public class MedusaWallpaper extends WallpaperService {
                     else if(Math.abs(this.vY) > MedusaWallpaper.MAX_VY){
                         this.vY = MedusaWallpaper.MAX_VY * Math.signum(vY);
                     }
-                    this.doOneFrame();
+                    this.mainHandler.post(this.frameTask);
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    this.doOneFrame();
+                    this.mainHandler.post(this.frameTask);
                     break;
             }
             super.onTouchEvent(event);
@@ -321,10 +323,10 @@ public class MedusaWallpaper extends WallpaperService {
                 // slider:
                 // draw slider into full bright
                 this.sliderRectDelta.set(
-                        (int)(this.currentX - this.sliderCenterX),
-                        (int)(this.currentY - this.sliderCenterY),
-                        (int)(this.currentX - this.sliderCenterX + this.sliderWidth),
-                        (int)(this.currentY - this.sliderCenterY + this.sliderHeight)
+                        (int) (this.currentX - this.sliderCenterX),
+                        (int) (this.currentY - this.sliderCenterY),
+                        (int) (this.currentX - this.sliderCenterX + this.sliderWidth),
+                        (int) (this.currentY - this.sliderCenterY + this.sliderHeight)
                 );
                 this.sliderRect.set(0, 0, this.sliderWidth, this.sliderWidth);
                 // draw the correct piece of the top into the slider buffer
@@ -335,9 +337,9 @@ public class MedusaWallpaper extends WallpaperService {
                 this.bufferCanvas.drawBitmap(this.sliderCanvasBitmap, null, this.sliderRectDelta, null);
                 // eyes:
                 // draw the eyes into the eyes canvas
-                int x = ((((int)this.currentX) - (this.darkBitmap.getWidth() / 2) +2) * 70) / this.darkBitmap.getWidth();
-                int y = ((((int)this.currentY) - (this.darkBitmap.getHeight() / 2) +2) * 14) / this.darkBitmap.getHeight();
-                this.eyesRect.set(x, y, this.eyesBitmap.getWidth() + x, this.eyesBitmap.getHeight()  +y);
+                int x = ((((int) this.currentX) - (this.darkBitmap.getWidth() / 2) + 2) * 70) / this.darkBitmap.getWidth();
+                int y = ((((int) this.currentY) - (this.darkBitmap.getHeight() / 2) + 2) * 14) / this.darkBitmap.getHeight();
+                this.eyesRect.set(x, y, this.eyesBitmap.getWidth() + x, this.eyesBitmap.getHeight() + y);
                 this.eyesCanvas.drawBitmap(this.eyesBitmap,
                         null,
                         this.eyesRect,
@@ -347,18 +349,20 @@ public class MedusaWallpaper extends WallpaperService {
                 // copy the eyes into buffer
                 this.bufferCanvas.drawBitmap(this.eyesCanvasBitmap, this.eyesX, this.eyesY, null);
                 // overlay
-                if(this.isTouched){
+                if (this.isTouched) {
                     this.bufferCanvas.drawBitmap(this.overlayBitmap, null, this.imageRect, null);
                 }
                 // copy the buffer to the screen canvas:
-                try {
-                    screenCanvas = holder.lockCanvas();
-                    if (screenCanvas != null) {
-                        screenCanvas.drawBitmap(this.bufferBitmap, null, this.screenRect, this.screenPaint);
-                    }
-                } finally {
-                    if (screenCanvas != null){
-                        holder.unlockCanvasAndPost(screenCanvas);
+                if (holder.getSurface().isValid()) {
+                    try {
+                        screenCanvas = holder.lockCanvas();
+                        if (screenCanvas != null) {
+                            screenCanvas.drawBitmap(this.bufferBitmap, null, this.screenRect, this.screenPaint);
+                        }
+                    } finally {
+                        if (screenCanvas != null) {
+                            holder.unlockCanvasAndPost(screenCanvas);
+                        }
                     }
                 }
                 // maybe re-schedule
