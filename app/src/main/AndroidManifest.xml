@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="net.emirac.medusawallpaper">
+    package="net.emirac.medusa">
 
     <uses-feature android:name="android.software.live_wallpaper" />
 
