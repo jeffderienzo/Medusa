@@ -130,6 +130,21 @@ public class MedusaWallpaper extends WallpaperService {
         }
 
         @Override
+        public void onOffsetsChanged(float xOffset, float yOffset, float xOffsetStep, float yOffsetStep, int xPixelOffset, int yPixelOffset) {
+            super.onOffsetsChanged(xOffset, yOffset, xOffsetStep, yOffsetStep, xPixelOffset, yPixelOffset);
+        }
+
+        @Override
+        public void onDesiredSizeChanged(int desiredWidth, int desiredHeight) {
+            super.onDesiredSizeChanged(desiredWidth, desiredHeight);
+        }
+
+        @Override
+        public void onSurfaceRedrawNeeded(SurfaceHolder holder) {
+            super.onSurfaceRedrawNeeded(holder);
+        }
+
+        @Override
         public void onDestroy() {
             this.mainHandler.removeCallbacks(this.frameTask);
             if (this.bufferBitmap != null) {
